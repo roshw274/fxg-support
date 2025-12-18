@@ -6,10 +6,11 @@ services:
     startCommand: npm start
     envVars:
       - key: DISCORD_TOKEN
-        scope: run
+        value: ${DISCORD_TOKEN}
       - key: MONGODB_URI
-        scope: run
+        value: ${MONGODB_URI}
       - key: WEBSITE_URL
-        scope: run
+        value: ${WEBSITE_URL}
       - key: NODE_ENV
         value: production
+
