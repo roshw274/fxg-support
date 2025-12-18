@@ -1,5 +1,4 @@
 services:
-  services:
   - type: web
     name: discord-ticket-bot
     runtime: node
