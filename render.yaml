@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: discord-ticket-bot
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DISCORD_TOKEN
+        scope: run
+        sync: false
+      - key: MONGODB_URI
+        scope: run
+        sync: false
+      - key: WEBSITE_URL
+        scope: run
+        sync: false
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
+    branches:
+      - name: main
+        isProduction: true
