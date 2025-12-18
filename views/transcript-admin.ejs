@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>#<%= transcript.ticketChannelName %> - Transcript</title>
+    <link rel="stylesheet" href="/css/admin-transcript.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="header-left">
+            <a href="/" class="breadcrumb">📄 Transcripts</a>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">#<%= transcript.ticketChannelName %></span>
+        </div>
+        <div class="header-right">
+            <a href="/transcript/<%= transcript.transcriptId %>/text" class="btn-outline">
+                ⬇ Download
+            </a>
+            <a href="/" class="btn-outline">
+                ← Back
+            </a>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <!-- Left Sidebar: Ticket Info -->
+        <aside class="ticket-panel">
+            <div class="panel-section">
+                <div class="panel-field">
+                    <label class="field-label">Channel</label>
+                    <div class="field-value">#<%= transcript.ticketChannelName %></div>
+                </div>
+
+                <div class="panel-field">
+                    <label class="field-label">Status</label>
+                    <div class="field-value">
+                        <span class="status-badge <%= transcript.status %>">
+                            <% if (transcript.status === 'closed') { %>🔴<% } else { %>🟢<% } %>
+                            <%= transcript.status.toUpperCase() %>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="panel-field">
+                    <label class="field-label">Category</label>
+                    <div class="field-value"><%= transcript.categoryName || 'N/A' %></div>
+                </div>
+
+                <div class="panel-field">
+                    <label class="field-label">Opened By</label>
+                    <div class="field-value">
+                        <% if (transcript.ticketOpener.avatar) { %>
+                            <img src="<%= transcript.ticketOpener.avatar %>" alt="" class="mini-avatar">
+                        <% } %>
+                        <%= transcript.ticketOpener.tag %>
+                    </div>
+                </div>
+
+                <% if (transcript.claimedBy) { %>
+                    <div class="panel-field">
+                        <label class="field-label">Claimed By</label>
+                        <div class="field-value">
+                            <% if (transcript.claimedBy.avatar) { %>
+                                <img src="<%= transcript.claimedBy.avatar %>" alt="" class="mini-avatar">
+                            <% } %>
+                            <%= transcript.claimedBy.tag %>
+                        </div>
+                    </div>
+                <% } %>
+
+                <div class="panel-field">
+                    <label class="field-label">Created</label>
+                    <div class="field-value"><%= moment(transcript.createdAt).format('MMM D, YYYY HH:mm:ss') %></div>
+                </div>
+
+                <% if (transcript.closedAt) { %>
+                    <div class="panel-field">
+                        <label class="field-label">Closed</label>
+                        <div class="field-value"><%= moment(transcript.closedAt).format('MMM D, YYYY HH:mm:ss') %></div>
+                    </div>
+                <% } %>
+
+                <% if (transcript.closeReason) { %>
+                    <div class="panel-field">
+                        <label class="field-label">Reason</label>
+                        <div class="field-value"><%= transcript.closeReason %></div>
+                    </div>
+                <% } %>
+            </div>
+        </aside>
+
+        <!-- Center: Messages -->
+        <main class="messages-container">
+            <div class="messages-area">
+                <% let lastAuthorId = null; %>
+                <% transcript.messages.forEach((message, index) => { %>
+                    <% 
+                        const isGrouped = message.authorId === lastAuthorId && 
+                                         (index > 0 && new Date(message.timestamp) - new Date(transcript.messages[index - 1].timestamp) < 60000);
+                        lastAuthorId = message.authorId;
+                    %>
+
+                    <div class="message <% if (isGrouped) { %>message-grouped<% } %>">
+                        <% if (!isGrouped) { %>
+                            <div class="message-avatar-header">
+                                <% if (message.avatar) { %>
+                                    <img src="<%= message.avatar %>" alt="" class="message-avatar" title="<%= message.author %> (<%= message.authorId %>)">
+                                <% } else { %>
+                                    <div class="message-avatar-placeholder"><%= message.author.charAt(0).toUpperCase() %></div>
+                                <% } %>
+                                <div class="message-author-info">
+                                    <span class="message-author">
+                                        <%= message.author %>
+                                        <% if (message.isBot) { %>
+                                            <span class="bot-badge">BOT</span>
+                                        <% } %>
+                                    </span>
+                                    <span class="message-timestamp" title="<%= moment(message.timestamp).format('YYYY-MM-DD HH:mm:ss Z') %>">
+                                        <%= moment(message.timestamp).format('HH:mm') %>
+                                    </span>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <div class="message-timestamp-grouped" title="<%= moment(message.timestamp).format('YYYY-MM-DD HH:mm:ss Z') %>">
+                                <%= moment(message.timestamp).format('HH:mm') %>
+                            </div>
+                        <% } %>
+
+                        <div class="message-content">
+                            <% if (message.content) { %>
+                                <div class="message-text"><%- processMessageContent(message.content) %></div>
+                            <% } %>
+
+                            <!-- Embeds -->
+                            <% if (message.embeds && message.embeds.length > 0) { %>
+                                <% message.embeds.forEach(embed => { %>
+                                    <div class="embed" <% if (embed.color) { %>style="border-left-color: <%= embed.color %>"<% } %>>
+                                        <% if (embed.author) { %>
+                                            <div class="embed-author">
+                                                <% if (embed.author.iconURL) { %>
+                                                    <img src="<%= embed.author.iconURL %>" alt="" class="embed-author-icon">
+                                                <% } %>
+                                                <%= embed.author.name %>
+                                            </div>
+                                        <% } %>
+
+                                        <% if (embed.title) { %>
+                                            <div class="embed-title"><%= embed.title %></div>
+                                        <% } %>
+
+                                        <% if (embed.description) { %>
+                                            <div class="embed-description"><%- embed.description.replace(/\n/g, '<br>') %></div>
+                                        <% } %>
+
+                                        <% if (embed.fields && embed.fields.length > 0) { %>
+                                            <div class="embed-fields">
+                                                <% embed.fields.forEach(field => { %>
+                                                    <div class="embed-field <% if (field.inline) { %>inline<% } %>">
+                                                        <div class="embed-field-name"><%= field.name %></div>
+                                                        <div class="embed-field-value"><%- field.value.replace(/\n/g, '<br>') %></div>
+                                                    </div>
+                                                <% }); %>
+                                            </div>
+                                        <% } %>
+
+                                        <% if (embed.thumbnail) { %>
+                                            <div class="embed-thumbnail">
+                                                <img src="<%= embed.thumbnail.url %>" alt="">
+                                            </div>
+                                        <% } %>
+
+                                        <% if (embed.image) { %>
+                                            <div class="embed-image">
+                                                <img src="<%= embed.image.url %>" alt="">
+                                            </div>
+                                        <% } %>
+
+                                        <% if (embed.footer) { %>
+                                            <div class="embed-footer">
+                                                <% if (embed.footer.iconURL) { %>
+                                                    <img src="<%= embed.footer.iconURL %>" alt="" class="embed-footer-icon">
+                                                <% } %>
+                                                <span><%= embed.footer.text %></span>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                <% }); %>
+                            <% } %>
+
+                            <!-- Attachments -->
+                            <% if (message.attachments && message.attachments.length > 0) { %>
+                                <div class="attachments">
+                                    <% message.attachments.forEach(att => { %>
+                                        <% if (att.contentType && att.contentType.startsWith('image/')) { %>
+                                            <img src="<%= att.url %>" alt="<%= att.filename %>" class="attachment-image">
+                                        <% } else if (att.contentType && att.contentType.startsWith('video/')) { %>
+                                            <video controls class="attachment-video">
+                                                <source src="<%= att.url %>" type="<%= att.contentType %>">
+                                            </video>
+                                        <% } else { %>
+                                            <a href="<%= att.url %>" class="attachment-file" download="<%= att.filename %>">
+                                                📎 <%= att.filename %> (<%= (att.size / 1024).toFixed(2) %> KB)
+                                            </a>
+                                        <% } %>
+                                    <% }); %>
+                                </div>
+                            <% } %>
+
+                            <!-- Reactions -->
+                            <% if (message.reactions && message.reactions.length > 0) { %>
+                                <div class="reactions">
+                                    <% message.reactions.forEach(reaction => { %>
+                                        <div class="reaction-pill">
+                                            <span class="reaction-emoji"><%= reaction.emoji %></span>
+                                            <span class="reaction-count"><%= reaction.count %></span>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        </main>
+
+        <!-- Right Sidebar: Metadata -->
+        <aside class="metadata-panel">
+            <div class="metadata-box">
+                <p>This transcript contains <strong><%= transcript.messages.length %></strong> messages</p>
+                <p class="meta-small">Created on <%= moment(transcript.createdAt).format('MMM D, YYYY') %></p>
+                <% if (transcript.closedAt) { %>
+                    <p class="meta-small">Closed on <%= moment(transcript.closedAt).format('MMM D, YYYY') %></p>
+                <% } %>
+            </div>
+        </aside>
+    </div>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= transcript.ticketChannelName %> - Transcript</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="/">📋 Transcripts</a>
+            </div>
+            <div class="nav-actions">
+                <a href="/transcript/<%= transcript.transcriptId %>/text" class="btn btn-sm btn-secondary">
+                    📥 Download
+                </a>
+                <a href="/" class="btn btn-sm btn-secondary">
+                    ← Back
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="transcript-header">
+            <div class="header-top">
+                <h1>#<%= transcript.ticketChannelName %></h1>
+                <span class="status-badge <%= transcript.status %>"><%= transcript.status.toUpperCase() %></span>
+            </div>
+
+            <div class="header-details">
+                <div class="detail-row">
+                    <span class="detail-label">Category:</span>
+                    <span class="detail-value"><%= transcript.categoryName || 'N/A' %></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Opened by:</span>
+                    <span class="detail-value">
+                        <% if (transcript.ticketOpener.avatar) { %>
+                            <img src="<%= transcript.ticketOpener.avatar %>" alt="" class="detail-avatar">
+                        <% } %>
+                        <%= transcript.ticketOpener.tag %>
+                    </span>
+                </div>
+                <% if (transcript.claimedBy) { %>
+                    <div class="detail-row">
+                        <span class="detail-label">Claimed by:</span>
+                        <span class="detail-value">
+                            <% if (transcript.claimedBy.avatar) { %>
+                                <img src="<%= transcript.claimedBy.avatar %>" alt="" class="detail-avatar">
+                            <% } %>
+                            <%= transcript.claimedBy.tag %>
+                        </span>
+                    </div>
+                <% } %>
+                <div class="detail-row">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value" title="<%= formatDate(transcript.createdAt) %>">
+                        <%= moment(transcript.createdAt).format('MMM Do YYYY, h:mm A') %>
+                    </span>
+                </div>
+                <% if (transcript.closedAt) { %>
+                    <div class="detail-row">
+                        <span class="detail-label">Closed:</span>
+                        <span class="detail-value" title="<%= formatDate(transcript.closedAt) %>">
+                            <%= moment(transcript.closedAt).format('MMM Do YYYY, h:mm A') %>
+                        </span>
+                    </div>
+                    <% if (transcript.closeReason) { %>
+                        <div class="detail-row">
+                            <span class="detail-label">Reason:</span>
+                            <span class="detail-value"><%= transcript.closeReason %></span>
+                        </div>
+                    <% } %>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="messages-container">
+            <% if (transcript.messages.length === 0) { %>
+                <div class="no-messages">
+                    <p>No messages in this transcript.</p>
+                </div>
+            <% } else { %>
+                <% 
+                    let lastAuthorId = null;
+                    let messageGroup = 0;
+                %>
+                <% transcript.messages.forEach((message, index) => { %>
+                    <% 
+                        let isGrouped = message.authorId === lastAuthorId && 
+                                       (new Date(message.timestamp) - new Date(transcript.messages[index - 1].timestamp)) < 60000;
+                        lastAuthorId = message.authorId;
+                    %>
+                    <div class="message" id="msg-<%= message.id %>">
+                        <div class="message-avatar">
+                            <% if (!isGrouped) { %>
+                                <% if (message.authorAvatar) { %>
+                                    <img src="<%= message.authorAvatar %>" alt="<%= message.author %>" class="avatar">
+                                <% } else { %>
+                                    <div class="avatar-placeholder"><%= message.author.charAt(0).toUpperCase() %></div>
+                                <% } %>
+                            <% } %>
+                        </div>
+
+                        <div class="message-content">
+                            <% if (!isGrouped) { %>
+                                <div class="message-header">
+                                    <span class="username" <% if (message.roleColor) { %> style="color: <%= message.roleColor %>;"<% } %>>
+                                        <%= message.author %>
+                                    </span>
+                                    <% if (message.isBot) { %>
+                                        <span class="bot-badge">BOT</span>
+                                    <% } %>
+                                    <span class="timestamp" title="<%= formatDate(message.timestamp) %>">
+                                        <%= moment(message.timestamp).format('MMM Do YYYY [at] h:mm A') %>
+                                    </span>
+                                    <% if (message.edited) { %>
+                                        <span class="edited-badge">(edited)</span>
+                                    <% } %>
+                                </div>
+                            <% } %>
+
+                            <div class="message-text"><%- processMessageContent(message.content) %></div>
+
+                            <% if (message.embeds && message.embeds.length > 0) { %>
+                                <div class="embeds">
+                                    <% message.embeds.forEach(embed => { %>
+                                        <div class="embed" <% if (embed.color) { %> style="border-left-color: #<%= embed.color.toString(16).padStart(6, '0') %>;"<% } %>>
+                                            <div class="embed-content">
+                                                <% if (embed.author) { %>
+                                                    <div class="embed-author">
+                                                        <% if (embed.author.icon_url) { %>
+                                                            <img src="<%= embed.author.icon_url %>" alt="" class="embed-author-icon">
+                                                        <% } %>
+                                                        <span><%= embed.author.name %></span>
+                                                    </div>
+                                                <% } %>
+                                                <% if (embed.title) { %>
+                                                    <div class="embed-title">
+                                                        <% if (embed.url) { %>
+                                                            <a href="<%= embed.url %>" target="_blank"><%= embed.title %></a>
+                                                        <% } else { %>
+                                                            <%= embed.title %>
+                                                        <% } %>
+                                                    </div>
+                                                <% } %>
+                                                <% if (embed.description) { %>
+                                                    <div class="embed-description"><%- embed.description %></div>
+                                                <% } %>
+                                                <% if (embed.fields && embed.fields.length > 0) { %>
+                                                    <div class="embed-fields">
+                                                        <% embed.fields.forEach(field => { %>
+                                                            <div class="embed-field" <% if (field.inline) { %> style="grid-column: span 1;"<% } %>>
+                                                                <strong><%= field.name %></strong>
+                                                                <div><%- field.value %></div>
+                                                            </div>
+                                                        <% }); %>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                            <% if (embed.thumbnail) { %>
+                                                <img src="<%= embed.thumbnail.url %>" alt="" class="embed-thumbnail">
+                                            <% } %>
+                                            <% if (embed.image) { %>
+                                                <img src="<%= embed.image.url %>" alt="" class="embed-image">
+                                            <% } %>
+                                            <% if (embed.footer) { %>
+                                                <div class="embed-footer">
+                                                    <% if (embed.footer.icon_url) { %>
+                                                        <img src="<%= embed.footer.icon_url %>" alt="" class="embed-footer-icon">
+                                                    <% } %>
+                                                    <span><%= embed.footer.text %></span>
+                                                </div>
+                                            <% } %>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            <% } %>
+
+                            <% if (message.attachments && message.attachments.length > 0) { %>
+                                <div class="attachments">
+                                    <% message.attachments.forEach(attachment => { %>
+                                        <div class="attachment">
+                                            <% if (attachment.contentType && attachment.contentType.startsWith('image/')) { %>
+                                                <img src="<%= attachment.url %>" alt="<%= attachment.filename %>" class="attachment-image">
+                                            <% } else if (attachment.contentType && attachment.contentType.startsWith('video/')) { %>
+                                                <video controls class="attachment-video">
+                                                    <source src="<%= attachment.url %>" type="<%= attachment.contentType %>">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            <% } else { %>
+                                                <a href="<%= attachment.url %>" class="attachment-link" target="_blank" download>
+                                                    <span class="attachment-icon">📎</span>
+                                                    <div>
+                                                        <div style="color: var(--text-primary); font-weight: 500;"><%= attachment.filename %></div>
+                                                        <div style="font-size: 0.75rem;">
+                                                            <% if (attachment.size) { %>
+                                                                <%= Math.round(attachment.size / 1024) %> KB
+                                                            <% } %>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            <% } %>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            <% } %>
+
+                            <% if (message.reactions && message.reactions.length > 0) { %>
+                                <div class="reactions">
+                                    <% message.reactions.forEach(reaction => { %>
+                                        <div class="reaction" title="<%= reaction.users.join(', ') %>">
+                                            <span class="reaction-emoji"><%= reaction.emoji %></span>
+                                            <span class="reaction-count"><%= reaction.count %></span>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } %>
+        </div>
+
+        <div class="transcript-footer">
+            <p>
+                This transcript contains <%= transcript.messages.length %> message(s).
+                <br>
+                Created on <%= moment(transcript.createdAt).format('MMMM Do YYYY [at] h:mm A') %>.
+                <% if (transcript.closedAt) { %>
+                    Closed on <%= moment(transcript.closedAt).format('MMMM Do YYYY [at] h:mm A') %>.
+                <% } %>
+            </p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Ticket Support System</p>
+    </footer>
+
+    <script>
+        function processMessageContent(content) {
+            // Replace mentions with styled links
+            content = content.replace(/<@!?(\d+)>/g, (match, userId) => {
+                return '<span class="mention">@user</span>';
+            });
+            // Escape HTML special characters
+            return content
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+    </script>
+</body>
+</html>

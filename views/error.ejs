@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="/">📋 Ticket Transcripts</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="error-message">
+            <h1>❌ Error</h1>
+            <p><%= message || 'An error occurred while loading the transcript.' %></p>
+            <a href="/" class="btn btn-primary">← Back to Home</a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Ticket Support System. All rights reserved.</p>
+    </footer>
+</body>
+</html>

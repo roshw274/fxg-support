@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Transcripts - Search & Archive</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="/">📋 Ticket Transcripts</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Ticket Support Transcripts</h1>
+            <p>Search and view archived ticket conversations</p>
+        </div>
+
+        <div class="search-section">
+            <form method="get" action="/" class="search-form">
+                <input 
+                    type="text" 
+                    name="search" 
+                    placeholder="Search by channel name, username, or staff member..." 
+                    value="<%= search %>"
+                    class="search-input"
+                >
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+        </div>
+
+        <% if (totalCount === 0) { %>
+            <div class="no-results">
+                <p>No transcripts found<%= search ? ' for "' + search + '"' : '' %>.</p>
+            </div>
+        <% } else { %>
+            <div class="transcripts-info">
+                <p>Showing <%= transcripts.length %> of <%= totalCount %> transcripts</p>
+            </div>
+
+            <div class="transcripts-grid">
+                <% transcripts.forEach(transcript => { %>
+                    <div class="transcript-card">
+                        <div class="card-header">
+                            <h3>
+                                <a href="/transcript/<%= transcript.transcriptId %>">
+                                    #<%= transcript.ticketChannelName %>
+                                </a>
+                            </h3>
+                            <span class="status-badge <%= transcript.status %>">
+                                <%= transcript.status.toUpperCase() %>
+                            </span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="card-row">
+                                <strong>Opened by:</strong>
+                                <span><%= transcript.ticketOpener.tag %></span>
+                            </div>
+                            <% if (transcript.claimedBy) { %>
+                                <div class="card-row">
+                                    <strong>Claimed by:</strong>
+                                    <span><%= transcript.claimedBy.tag %></span>
+                                </div>
+                            <% } %>
+                            <% if (transcript.categoryName) { %>
+                                <div class="card-row">
+                                    <strong>Category:</strong>
+                                    <span><%= transcript.categoryName %></span>
+                                </div>
+                            <% } %>
+                            <div class="card-row">
+                                <strong>Messages:</strong>
+                                <span><%= transcript.messages.length %></span>
+                            </div>
+                            <div class="card-row">
+                                <strong>Views:</strong>
+                                <span><%= transcript.viewCount %></span>
+                            </div>
+                            <div class="card-row">
+                                <strong>Created:</strong>
+                                <span><%= moment(transcript.createdAt).format('MMM Do YYYY, h:mm A') %></span>
+                            </div>
+                            <% if (transcript.closedAt) { %>
+                                <div class="card-row">
+                                    <strong>Closed:</strong>
+                                    <span><%= moment(transcript.closedAt).format('MMM Do YYYY, h:mm A') %></span>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <div class="card-footer">
+                            <a href="/transcript/<%= transcript.transcriptId %>" class="btn btn-primary">
+                                View Transcript
+                            </a>
+                            <a href="/transcript/<%= transcript.transcriptId %>/text" class="btn btn-secondary" target="_blank">
+                                Download Text
+                            </a>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+
+            <% if (totalPages > 1) { %>
+                <div class="pagination">
+                    <% if (currentPage > 1) { %>
+                        <a href="/?page=1<%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-link">« First</a>
+                        <a href="/?page=<%= currentPage - 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-link">‹ Previous</a>
+                    <% } %>
+
+                    <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+                        <% if (i === currentPage) { %>
+                            <span class="page-link active"><%= i %></span>
+                        <% } else { %>
+                            <a href="/?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-link"><%= i %></a>
+                        <% } %>
+                    <% } %>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="/?page=<%= currentPage + 1 %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-link">Next ›</a>
+                        <a href="/?page=<%= totalPages %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" class="page-link">Last »</a>
+                    <% } %>
+                </div>
+            <% } %>
+        <% } %>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Ticket Support System. All rights reserved.</p>
+    </footer>
+</body>
+</html>
