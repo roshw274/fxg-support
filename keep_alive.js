@@ -17,28 +17,28 @@ const createMessageProcessor = (transcript) => {
   return (content) => {
     if (!content) return '';
     
-    // Replace user mentions with usernames
-    content = content.replace(/<@!?(\d+)>/g, (match, userId) => {
+    // First, HTML escape the content
+    let escaped = content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    
+    // Replace user mentions with usernames (after escaping so we can safely add HTML)
+    escaped = escaped.replace(/&lt;@!?(\d+)&gt;/g, (match, userId) => {
       const user = transcript.messages.find(m => m.authorId === userId);
       if (user) {
         return `<span class="mention">@${user.author}</span>`;
       }
-      return '@unknown-user';
+      return '<span class="mention">@unknown-user</span>';
     });
 
     // Replace role mentions
-    content = content.replace(/<@&(\d+)>/g, '@role');
+    escaped = escaped.replace(/&lt;@&(\d+)&gt;/g, '<span class="mention">@role</span>');
 
     // Replace channel mentions
-    content = content.replace(/<#(\d+)>/g, '#channel');
+    escaped = escaped.replace(/&lt;#(\d+)&gt;/g, '<span class="mention">#channel</span>');
 
-    // HTML escape
-    content = content
-      .replace(/&(?!#?\w+;)/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    return content;
+    return escaped;
   };
 };
 

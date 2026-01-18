@@ -97,8 +97,8 @@
                     <div class="message" id="msg-<%= message.id %>">
                         <div class="message-avatar">
                             <% if (!isGrouped) { %>
-                                <% if (message.authorAvatar) { %>
-                                    <img src="<%= message.authorAvatar %>" alt="<%= message.author %>" class="avatar">
+                                <% if (message.authorAvatar || message.avatar) { %>
+                                    <img src="<%= message.authorAvatar || message.avatar %>" alt="<%= message.author %>" class="avatar">
                                 <% } else { %>
                                     <div class="avatar-placeholder"><%= message.author.charAt(0).toUpperCase() %></div>
                                 <% } %>
